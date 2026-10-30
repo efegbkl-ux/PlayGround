@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0907" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="description" content="KAYISI: FRUIT OF FURY — a muscular anthropomorphic apricot beats up the alley. A chaotic 3D dark-comedy beat-'em-up." />
+  <title>KAYISI: Fruit of Fury</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="preload" href="./assets/fonts/Anton.ttf" as="font" type="font/ttf" crossorigin />
+  <link rel="preload" href="./assets/fonts/Inter.woff2" as="font" type="font/woff2" crossorigin />
+</head>
+<body>
+  <div id="app">
+    <canvas id="scene" aria-label="3D fight scene"></canvas>
+    <div class="fx-vignette" aria-hidden="true"></div>
+    <div class="fx-grain" aria-hidden="true"></div>
+    <div class="fx-flash" id="flash" aria-hidden="true"></div>
+
+    <!-- ============ HUD ============ -->
+    <div id="hud" class="hud is-hidden" aria-hidden="true">
+      <div class="topbar">
+        <div class="brand">
+          <div class="brand-mark">
+            <span class="brand-k">K</span>
+            <span class="brand-ring"></span>
+          </div>
+          <div class="brand-type">
+            <strong>KAYISI</strong>
+            <em>FRUIT OF FURY</em>
+          </div>
+        </div>
+
+        <div class="round-chip" id="roundChip">
+          <span class="round-label">ROUND</span>
+          <b id="roundNum">01</b>
+          <span class="round-sep"></span>
+          <span class="round-mode">ALLEY MAYHEM</span>
+        </div>
+
+        <div class="scoreboard">
+          <div class="score-item">
+            <span>SCORE</span>
+            <b id="score">000000</b>
+          </div>
+          <div class="score-item kos">
+            <span>K.O.</span>
+            <b id="kos">00</b>
+          </div>
+          <button id="btnSound" class="icon-btn" aria-label="Toggle sound" title="Toggle sound">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/><path class="wave" d="M14 3.2v2.1a6.8 6.8 0 0 1 0 13.4v2.1A9 9 0 0 0 14 3.2z"/></svg>
+          </button>
+          <button id="btnPause" class="icon-btn" aria-label="Pause and settings" title="Pause">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="combo-wrap" id="comboWrap">
+        <div class="combo-num"><span id="comboVal">0</span><i>HIT</i></div>
+        <div class="combo-word" id="comboWord">MASHED</div>
+        <div class="combo-meter"><span id="comboFill"></span></div>
+      </div>
+
+      <div class="objective" id="objective">
+        <span class="obj-dot"></span>
+        <b>DEMOLISH THE ALLEY</b>
+        <span>·</span>
+        <em>SWITCH WEAPONS, KEEP THE COMBO ALIVE</em>
+      </div>
+
+      <div class="announce" id="announce" aria-live="polite">
+        <span class="announce-kicker" id="announceKicker">KAYISI</span>
+        <strong id="announceText">FRUIT OF FURY</strong>
+      </div>
+
+      <div class="vitals" id="vitals">
+        <div class="vitals-head">
+          <span class="vit-label">APRICOT POWER</span>
+          <span class="vit-num"><b id="hpText">100</b><i>/100</i></span>
+        </div>
+        <div class="hp-track"><div class="hp-fill" id="hpFill"></div><div class="hp-ticks"></div></div>
+        <div class="vit-sub"><span id="statusText">UNBOTHERED</span><span class="vit-heart">◆</span></div>
+      </div>
+
+      <div class="weapon-dock" id="weaponDock" role="group" aria-label="Weapons">
+        <button class="wpn-slot" data-weapon="0" aria-label="Baseball bat"><span class="wpn-icon" data-icon="bat"></span><span class="wpn-key">1</span></button>
+        <button class="wpn-slot" data-weapon="1" aria-label="Katana"><span class="wpn-icon" data-icon="katana"></span><span class="wpn-key">2</span></button>
+        <button class="wpn-slot" data-weapon="2" aria-label="Metal pipe"><span class="wpn-icon" data-icon="pipe"></span><span class="wpn-key">3</span></button>
+        <button class="wpn-slot" data-weapon="3" aria-label="Sledgehammer"><span class="wpn-icon" data-icon="hammer"></span><span class="wpn-key">4</span></button>
+        <button class="wpn-slot" data-weapon="4" aria-label="Folding chair"><span class="wpn-icon" data-icon="chair"></span><span class="wpn-key">5</span></button>
+        <div class="wpn-readout">
+          <strong id="wpnName">LIL' SLUGGER</strong>
+          <span id="wpnStats">BALANCED · 1.0×</span>
+        </div>
+      </div>
+
+      <div class="mobile-controls" id="mobileControls">
+        <div class="stick-zone" id="stickZone" aria-label="Movement joystick">
+          <div class="stick-base">
+            <div class="stick-cross"></div>
+            <div class="stick-knob" id="stickKnob"><span></span></div>
+          </div>
+          <em>MOVE</em>
+        </div>
+
+        <div class="action-cluster">
+          <button class="act act-special" id="btnSpecial" aria-label="Special attack">
+            <span class="act-ring"></span>
+            <b>APRICOT<br/>ANNIHILATION</b>
+            <i id="specialCharge"></i>
+          </button>
+          <button class="act act-switch" id="btnSwitch" aria-label="Switch weapon">
+            <svg viewBox="0 0 24 24"><path d="M7 7h9V4l5 4.5L16 13v-3H7V7zm10 10H8v3l-5-4.5L8 11v3h9v3z"/></svg>
+            <span>SWAP</span>
+          </button>
+          <button class="act act-strike" id="btnStrike" aria-label="Strike">
+            <span class="act-ring"></span>
+            <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 30c6-2 10-8 12-13l5 2c-1 4-2 7-3 10 4 5 9 7 15 7l-2 6c-8 0-15-3-20-8-3 1-6 2-9 2l2-6z"/><path d="M32 6l9 4-3 6-8-4 2-6z"/></svg>
+            <b>STRIKE</b>
+          </button>
+        </div>
+      </div>
+
+      <div class="weapon-toast" id="weaponToast"><span id="toastWpn">LIL' SLUGGER</span><em>EQUIPPED</em></div>
+      <div class="hint-desktop">WASD MOVE · DRAG LOOK · SPACE / CLICK STRIKE · 1–5 WEAPONS · SHIFT DASH</div>
+    </div>
+
+    <!-- ============ TITLE ============ -->
+    <div id="titleScreen" class="title-screen">
+      <div class="title-bg-word" aria-hidden="true">KAYISI</div>
+      <div class="title-panel">
+        <div class="eyebrow"><span class="live-dot"></span> A DARK-COMEDY BEAT-'EM-UP <span class="eyebrow-line"></span></div>
+        <h1 class="title-logo">
+          <span class="logo-top">KAYISI</span>
+          <span class="logo-sub">FRUIT <i>of</i> FURY</span>
+        </h1>
+        <p class="title-blurb">One absurdly muscular apricot. Two deeply outmatched men.<br/>An entire alley about to have a very bad afternoon.</p>
+
+        <div class="matchup">
+          <div class="fighter-card main-card">
+            <span class="card-tag">YOU</span>
+            <strong>THE APRICOT</strong>
+            <em>Ripe. Ripped. Unreasonable.</em>
+          </div>
+          <span class="vs">VS</span>
+          <div class="fighter-card">
+            <span class="card-tag">VICTIM 01</span>
+            <strong>THE MUTE</strong>
+            <em>Sign says it all.</em>
+          </div>
+          <div class="fighter-card">
+            <span class="card-tag">VICTIM 02</span>
+            <strong>THE 2016 GUY</strong>
+            <em>Still living in the past.</em>
+          </div>
+        </div>
+
+        <div class="title-actions">
+          <button id="btnPlay" class="btn-play" aria-label="Play">
+            <span class="btn-shine"></span>
+            <span class="btn-play-label">PLAY</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l12 7-12 7V5z"/></svg>
+          </button>
+          <div class="title-note">
+            <b>TOUCH READY</b>
+            <span>Joystick + strike buttons<br/>Optional tilt controls</span>
+          </div>
+        </div>
+
+        <div class="title-footer">
+          <span>WASD / JOYSTICK MOVE</span><i>◆</i>
+          <span>DRAG TO LOOK</span><i>◆</i>
+          <span>SWITCH WEAPONS OFTEN</span><i>◆</i>
+          <span>NO APRICOTS WERE HARMED*</span>
+        </div>
+      </div>
+      <div class="title-side">EST. 2026<br/>KAYISI GYM<br/>ALLEY DIVISION</div>
+    </div>
+
+    <!-- ============ PAUSE / SETTINGS ============ -->
+    <div id="pauseScreen" class="modal-screen is-hidden">
+      <div class="modal-card">
+        <div class="modal-kicker">INTERMISSION</div>
+        <h2>PAUSED<span>.</span></h2>
+        <p class="modal-copy">The alley can wait. The apricot cannot.</p>
+        <div class="settings-list">
+          <button class="setting-row" id="setTilt">
+            <span class="setting-ico">◐</span>
+            <span class="setting-txt"><b>TILT CONTROLS</b><em id="tiltState">OFF · tap to enable</em></span>
+            <span class="toggle" id="tiltToggle"><i></i></span>
+          </button>
+          <button class="setting-row" id="setSound">
+            <span class="setting-ico">♪</span>
+            <span class="setting-txt"><b>SOUND</b><em id="soundState">ON</em></span>
+            <span class="toggle is-on" id="soundToggle"><i></i></span>
+          </button>
+          <button class="setting-row" id="setCam">
+            <span class="setting-ico">◎</span>
+            <span class="setting-txt"><b>CINEMATIC CAMERA</b><em id="camState">ON</em></span>
+            <span class="toggle is-on" id="camToggle"><i></i></span>
+          </button>
+        </div>
+        <div class="modal-actions">
+          <button id="btnResume" class="btn-solid">RESUME THE CARNAGE</button>
+          <button id="btnRestart" class="btn-ghost">RESTART ROUND</button>
+        </div>
+        <div class="modal-foot">Tap a weapon slot to swap. Big hits charge the special.</div>
+      </div>
+    </div>
+
+    <div id="deadScreen" class="modal-screen is-hidden">
+      <div class="modal-card dead-card">
+        <div class="modal-kicker">TEMPORARY SETBACK</div>
+        <h2>OUT OF JUICE<span>.</span></h2>
+        <p class="modal-copy">Even a ripe legend needs a second. The alley stays exactly where it is.</p>
+        <button id="btnRevive" class="btn-solid">GET BACK UP</button>
+      </div>
+    </div>
+
+    <div id="boot" class="boot">
+      <div class="boot-mark">K</div>
+      <div class="boot-word">RIPENING THE ALLEY</div>
+      <div class="boot-bar"><span></span></div>
+    </div>
+
+    <div class="rotate-tip" aria-hidden="true"><span>↻</span> ROTATE FOR THE FULL ALLEY</div>
+  </div>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
